@@ -1,51 +1,122 @@
 'use client'
 
-// import { useEffect, useState } from 'react';
+// import { useState } from 'react';
 
-// interface Achievement {
+// interface Auction {
 //   id: number;
-//   name: string;
+//   item: { id: number };
+//   bid: number;
+//   buyout: number;
+//   quantity: number;
+//   itemDetails?: Item | null; // 수정: Item | undefined | null
 // }
 
-// interface AchievementsIndexResponse {
-//   achievements: Achievement[];
+// interface Item {
+//   id: number;
+//   name: string;
+//   quality: { name: string };
+//   level: number;
+// }
+
+// interface AuctionsResponse {
+//   auctions: Auction[];
 // }
 
 // const HomePage: React.FC = () => {
-//   const [data, setData] = useState<AchievementsIndexResponse | null>(null);
+//   // Connected Realm 리스트
+//   const realms = [
+//     { id: 205, name: '아즈샤라' },
+//     { id: 210, name: '듀로탄' },
+//     { id: 214, name: '윈드러너' },
+//     { id: 2116, name: '줄진' }
+//   ];
+
+//   const [data, setData] = useState<Auction[] | null>(null); // 업데이트: Auction[]만 저장
 //   const [error, setError] = useState<string | null>(null);
+//   const [loading, setLoading] = useState<boolean>(false);
 
-//   useEffect(() => {
-//     const fetchAchievements = async () => {
-//       try {
-//         const response = await fetch('/api/achievements');
-//         if (!response.ok) {
-//           throw new Error('Failed to fetch achievements');
-//         }
-//         const result = await response.json();
-//         setData(result);
-//       } catch (error) {
-//         setError('Failed to load data');
+//   // 경매 데이터를 가져오는 함수
+//   const fetchAuctions = async (connectedRealmId: number) => {
+//     setLoading(true);
+//     setError(null); // 오류 초기화
+//     setData(null); // 기존 데이터 초기화
+//     try {
+//       const response = await fetch(`/api/auctions/${connectedRealmId}`);
+//       if (!response.ok) {
+//         throw new Error('Failed to fetch auctions');
 //       }
-//     };
+//       const result: AuctionsResponse = await response.json();
 
-//     fetchAchievements();
-//   }, []);
+//       // 각 Auction의 itemId로 Item 정보를 가져오기
+//       const auctionsWithItemDetails = await Promise.all(
+//         result.auctions.map(async (auction) => {
+//           const itemDetails = await fetchItem(auction.item.id); // Item 정보 가져오기
+//           return { ...auction, itemDetails }; // Auction에 Item 정보 추가
+//         })
+//       );
+
+//       setData(auctionsWithItemDetails);
+//     } catch (error) {
+//       setError('Failed to load data');
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   // 개별 Item 정보를 가져오는 함수
+//   const fetchItem = async (itemId: number): Promise<Item | null> => {
+//     try {
+//       const response = await fetch(`/api/item/${itemId}`);
+//       if (!response.ok) {
+//         throw new Error('Failed to fetch item');
+//       }
+//       const item: Item = await response.json();
+//       return item;
+//     } catch (error) {
+//       console.error(`Failed to fetch item with ID ${itemId}`, error);
+//       return null;
+//     }
+//   };
 
 //   return (
 //     <div>
-//       <h1>WoW Achievements</h1>
+//       <h1>Connected Realm Auctions</h1>
+//       <h2>Select a Realm</h2>
+//       <ul>
+//         {realms.map((realm) => (
+//           <li key={realm.id}>
+//             <button onClick={() => fetchAuctions(realm.id)}>
+//               {realm.name} (ID: {realm.id})
+//             </button>
+//           </li>
+//         ))}
+//       </ul>
+
+//       {loading && <p>Loading auctions...</p>}
 //       {error && <p>{error}</p>}
 //       {data ? (
 //         <ul>
-//           {data.achievements.map((achievement) => (
-//             <li key={achievement.id}>
-//               {achievement.id}: {achievement.name}
+//           {data.map((auction) => (
+//             <li key={auction.id}>
+//               <strong>Auction ID: {auction.id}</strong> <br />
+//               Item ID: {auction.item.id} <br />
+//               {auction.itemDetails ? (
+//                 <>
+//                   Item Name: {auction.itemDetails.name} <br />
+//                   Item Quality: {auction.itemDetails.quality.name} <br />
+//                   Item Level: {auction.itemDetails.level} <br />
+//                 </>
+//               ) : (
+//                 <p>Loading item details...</p>
+//               )}
+//               Bid: {auction.bid} <br />
+//               Buyout: {auction.buyout} <br />
+//               Quantity: {auction.quantity}
 //             </li>
 //           ))}
 //         </ul>
 //       ) : (
-//         <p>Loading...</p>
+//         <p>No auction data available. Select a realm to see the auctions.</p>
 //       )}
 //     </div>
 //   );
@@ -53,44 +124,38 @@
 
 // export default HomePage;
 
-// app/page.tsx
-// app/page.tsx
+
 // app/page.tsx
 import { useState } from 'react';
 
-interface Auction {
+interface Item {
   id: number;
-  item: { id: number };
-  bid: number;
-  buyout: number;
-  quantity: number;
-}
-
-interface AuctionsResponse {
-  auctions: Auction[];
+  name: string;
+  quality: { name: string };
+  level: number;
 }
 
 const HomePage: React.FC = () => {
-  // Connected Realm 리스트
-  const realms = [
-    { id: 205, name: '아즈샤라' },
-    { id: 210, name: '듀로탄' },
-    { id: 214, name: '윈드러너' },
-    { id: 2116, name: '줄진' }
-  ];
-
-  const [data, setData] = useState<AuctionsResponse | null>(null);
+  const [itemId, setItemId] = useState<string>(''); // 아이템 ID
+  const [data, setData] = useState<Item | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
-  const fetchAuctions = async (connectedRealmId: number) => {
+  const fetchItem = async () => {
     setLoading(true);
-    setError(null); // 오류 초기화
-    setData(null); // 기존 데이터 초기화
+    setError(null);
+    setData(null);
+
+    if (!itemId) {
+      setError('Please provide an itemId');
+      setLoading(false);
+      return;
+    }
+
     try {
-      const response = await fetch(`/api/auctions/${connectedRealmId}`);
+      const response = await fetch(`/api/item/${itemId}`);
       if (!response.ok) {
-        throw new Error('Failed to fetch auctions');
+        throw new Error('Failed to fetch item');
       }
       const result = await response.json();
       setData(result);
@@ -103,30 +168,27 @@ const HomePage: React.FC = () => {
 
   return (
     <div>
-      <h1>Connected Realm Auctions</h1>
-      <h2>Select a Realm</h2>
-      <ul>
-        {realms.map((realm) => (
-          <li key={realm.id}>
-            <button onClick={() => fetchAuctions(realm.id)}>
-              {realm.name} (ID: {realm.id})
-            </button>
-          </li>
-        ))}
-      </ul>
+      <h1>Item Information</h1>
+      <input
+        type="text"
+        value={itemId}
+        onChange={(e) => setItemId(e.target.value)}
+        placeholder="Enter Item ID"
+      />
+      <button onClick={fetchItem}>Fetch Item</button>
 
-      {loading && <p>Loading auctions...</p>}
+      {loading && <p>Loading item data...</p>}
       {error && <p>{error}</p>}
       {data ? (
-        <ul>
-          {data.auctions.map((auction) => (
-            <li key={auction.id}>
-              Auction ID: {auction.id}, Item ID: {auction.item.id}, Bid: {auction.bid}, Buyout: {auction.buyout}, Quantity: {auction.quantity}
-            </li>
-          ))}
-        </ul>
+        <div>
+          <h2>Item Details</h2>
+          <p>ID: {data.id}</p>
+          <p>Name: {data.name}</p>
+          <p>Quality: {data.quality.name}</p>
+          <p>Item Level: {data.level}</p>
+        </div>
       ) : (
-        <p>No auction data available. Select a realm to see the auctions.</p>
+        <p>No item data available. Enter an item ID to see the details.</p>
       )}
     </div>
   );

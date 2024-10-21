@@ -13,9 +13,9 @@ export async function getItemsInfo(itemIds: number[]): Promise<Item[]> {
   const apiBaseUrl = process.env.API_BASE_URL!;
   const token = await getToken();
 
-  const region = 'us'; // 또는 필요에 따라 다른 지역
-  const namespace = 'static-us'; // 아이템 데이터는 고정된 값이므로 'static' 사용
-  const locale = 'en_US'; // 로컬라이즈 정보
+  const region = 'kr'; // 또는 필요에 따라 다른 지역
+  const namespace = 'static-kr'; // 아이템 데이터는 고정된 값이므로 'static' 사용
+  const locale = 'ko_KR'; // 로컬라이즈 정보
 
   try {
     // 각각의 itemId에 대해 API 호출을 Promise.all로 병렬 처리

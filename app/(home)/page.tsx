@@ -1,6 +1,5 @@
 'use client'
-
-// import { useState } from 'react';
+import { useState } from 'react';
 
 // interface Auction {
 //   id: number;
@@ -126,7 +125,73 @@
 
 
 // app/page.tsx
-import { useState } from 'react';
+// import { useState } from 'react';
+
+// interface Item {
+//   id: number;
+//   name: string;
+//   quality: { name: string };
+//   level: number;
+// }
+
+// const HomePage: React.FC = () => {
+//   const [itemId, setItemId] = useState<string>(''); // 아이템 ID
+//   const [data, setData] = useState<Item | null>(null);
+//   const [error, setError] = useState<string | null>(null);
+//   const [loading, setLoading] = useState<boolean>(false);
+
+//   const fetchItem = async () => {
+//     setLoading(true);
+//     setError(null);
+//     setData(null);
+
+//     if (!itemId) {
+//       setError('Please provide an itemId');
+//       setLoading(false);
+//       return;
+//     }
+
+//     try {
+//       const response = await fetch(`/api/item/${itemId}`);
+//       if (!response.ok) {
+//         throw new Error('Failed to fetch item');
+//       }
+//       const result = await response.json();
+//       setData(result);
+//     } catch (error) {
+//       setError('Failed to load data');
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   return (
+//     <div>
+//       <h1>Item Information</h1>
+//       <input
+//         type="text"
+//         value={itemId}
+//         onChange={(e) => setItemId(e.target.value)}
+//         placeholder="Enter Item ID"
+//       />
+//       <button onClick={fetchItem}>Fetch Item</button>
+
+//       {loading && <p>Loading item data...</p>}
+//       {error && <p>{error}</p>}
+//       {data ? (
+//         <div>
+//           <h2>Item Details</h2>
+//           <p>ID: {data.id}</p>
+//           <p>Name: {data.name}</p>
+//           <p>Quality: {data.quality.name}</p>
+//           <p>Item Level: {data.level}</p>
+//         </div>
+//       ) : (
+//         <p>No item data available. Enter an item ID to see the details.</p>
+//       )}
+//     </div>
+//   );
+// };
 
 interface Item {
   id: number;
@@ -135,63 +200,53 @@ interface Item {
   level: number;
 }
 
+interface Auction {
+  id: number;
+  item: { id: number };
+  bid: number;
+  buyout: number;
+  quantity: number;
+  itemDetails?: Item | null; // 수정: Item | undefined | null
+}
+
+interface AuctionsResponse {
+  auctions: Auction[];
+}
+
 const HomePage: React.FC = () => {
-  const [itemId, setItemId] = useState<string>(''); // 아이템 ID
-  const [data, setData] = useState<Item | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
-
   const fetchItem = async () => {
-    setLoading(true);
-    setError(null);
-    setData(null);
-
-    if (!itemId) {
-      setError('Please provide an itemId');
-      setLoading(false);
-      return;
-    }
-
     try {
-      const response = await fetch(`/api/item/${itemId}`);
+      const response = await fetch(`/api/commodities`);
       if (!response.ok) {
         throw new Error('Failed to fetch item');
       }
       const result = await response.json();
-      setData(result);
+      console.log(result);
     } catch (error) {
-      setError('Failed to load data');
     } finally {
-      setLoading(false);
     }
   };
 
+  //   // 경매 데이터를 가져오는 함수
+  const fetchAuctions = async (connectedRealmId: number) => {
+    try {
+      const response = await fetch(`/api/auctions/${connectedRealmId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch auctions');
+      }
+      const result: AuctionsResponse = await response.json();
+      console.log(result);
+    } catch (error) {
+    } finally {
+    }
+  };
+
+  fetchAuctions(205);
+  fetchItem();
   return (
     <div>
-      <h1>Item Information</h1>
-      <input
-        type="text"
-        value={itemId}
-        onChange={(e) => setItemId(e.target.value)}
-        placeholder="Enter Item ID"
-      />
-      <button onClick={fetchItem}>Fetch Item</button>
-
-      {loading && <p>Loading item data...</p>}
-      {error && <p>{error}</p>}
-      {data ? (
-        <div>
-          <h2>Item Details</h2>
-          <p>ID: {data.id}</p>
-          <p>Name: {data.name}</p>
-          <p>Quality: {data.quality.name}</p>
-          <p>Item Level: {data.level}</p>
-        </div>
-      ) : (
-        <p>No item data available. Enter an item ID to see the details.</p>
-      )}
     </div>
   );
-};
+}
 
 export default HomePage;
